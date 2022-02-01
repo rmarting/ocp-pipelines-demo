@@ -1,0 +1,20 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: hello-params-task
+  annotations:
+    description: |
+      A simple task that prints the a variable greeting message
+spec:
+  params:
+    - name: person
+      description: Name of person to greet
+      default: World
+      type: string
+  steps:
+    - name: say-hello
+      image: registry.redhat.io/ubi7/ubi-minimal
+      command:
+        - /bin/bash
+      args: ['-c', 'echo Hello $(params.person)']

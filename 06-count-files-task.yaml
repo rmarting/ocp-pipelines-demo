@@ -1,0 +1,21 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: count-files-task
+  annotations:
+    description: |
+      Sample task to count files from a Git repository
+      identified as resource.
+spec:
+  resources:
+    inputs:
+      - name: repo
+        type: git
+        targetPath: code
+  steps:
+    - name: count
+      image: registry.redhat.io/ubi7/ubi-minimal
+      command:
+        - /bin/bash
+      args: ['-c', 'echo $(find /workspace/code -type f | wc -l) files in repo']

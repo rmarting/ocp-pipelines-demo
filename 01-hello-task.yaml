@@ -1,0 +1,15 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: hello-task
+  annotations:
+    description: |
+      A simple task that prints the a greeting message
+spec:
+  steps:
+    - name: say-hello
+      image: registry.redhat.io/ubi7/ubi-minimal
+      command:
+        - /bin/bash
+      args: ['-c', 'echo Hello World']

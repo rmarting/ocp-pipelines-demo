@@ -1,0 +1,13 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: git-repo-two
+  annotations:
+    description: |
+      Sample resource to identify a Git repository  
+spec:
+  type: git
+  params:
+    - name: url
+      value: https://github.com/elsony/devfile-sample-code-with-quarkus.git

@@ -1,0 +1,40 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: count-workspace-pipeline
+  annotations:
+    description: |
+      Sample pipeline using a workspace to share data between
+      different tasks.
+spec:
+  params:
+    - name: GIT_URL
+      type: string
+      default: "https://github.com/mashrafrh/spring-trial.git"
+    - name: GIT_REVISION
+      type: string
+      default: "main"      
+  workspaces:
+    - name: workspace
+  tasks:
+    - name: fetch-repository
+      params:
+        - name: url
+          value: $(params.GIT_URL)
+        - name: revision
+          value: $(params.GIT_REVISION)
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+    - name: count-repo
+      taskRef:
+        name: count-files-workspace-task
+      runAfter:
+        - fetch-repository
+      workspaces:
+        - name: source
+          workspace: workspace

@@ -1,0 +1,13 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: PipelineResource
+metadata:
+  name: git-repo-one
+  annotations:
+    description: |
+      Sample resource to identify a Git repository
+spec:
+  type: git  
+  params:
+    - name: url
+      value: https://github.com/mashrafrh/spring-trial.git

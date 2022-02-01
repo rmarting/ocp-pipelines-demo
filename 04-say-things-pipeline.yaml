@@ -1,0 +1,24 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: say-things-pipeline
+  annotations:
+    description: |
+      Sample pipeline with some tasks to say things
+spec:
+  tasks:
+    - name: first-task
+      params:
+        - name: pause-duration
+          value: "2"
+        - name: say-what
+          value: "Hello, this is the first task"
+      taskRef:
+        name: say-something-task
+    - name: second-task
+      params:
+        - name: say-what
+          value: "And this is the second task"
+      taskRef:
+        name: say-something-task

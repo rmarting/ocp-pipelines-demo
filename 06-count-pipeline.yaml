@@ -1,0 +1,20 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: count-pipeline
+  annotations:
+    description: |
+      Sample pipeline using a resource to identify the Git repository to use.
+spec:
+  resources:
+    - name: git-repo
+      type: git
+  tasks:
+    - name: count-task-repo
+      taskRef:
+        name: count-files-task
+      resources:
+        inputs:
+          - name: repo
+            resource: git-repo

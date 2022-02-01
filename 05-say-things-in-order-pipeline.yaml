@@ -1,0 +1,47 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: say-things-in-order-pipeline
+  annotations:
+    description: |
+      Sample pipeline saying things in different moments.
+spec:
+  tasks:
+    - name: first-task
+      params:
+        - name: pause-duration
+          value: "2"
+        - name: say-what
+          value: "Hello, this is the first task"
+      taskRef:
+        name: say-something-task
+    - name: second-parallel-task
+      params:
+        - name: say-what
+          value: "Happening after task 1, in parallel with task 3"
+        - name: pause-duration
+          value: "2"
+      taskRef:
+        name: say-something-task
+      runAfter:
+        - first-task
+    - name: third-parallel-task
+      params:
+        - name: say-what
+          value: "Happening after task 1, in parallel with task 2"
+        - name: pause-duration
+          value: "1"
+      taskRef:
+        name: say-something-task
+      runAfter:
+        - first-task
+    - name: fourth-task
+      params:
+        - name: say-what
+          value: "Happening after task 2 and 3"
+      taskRef:
+        name: say-something-task
+      runAfter:
+        - second-parallel-task
+        - third-parallel-task

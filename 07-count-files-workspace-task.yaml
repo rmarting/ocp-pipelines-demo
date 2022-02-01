@@ -1,0 +1,18 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: count-files-workspace-task
+  annotations:
+    description: |
+      Sample task counting files from a workspace.
+spec:
+  workspaces:
+    - name: source
+      description: The workspace consisting of repository.
+  steps:
+    - name: count
+      image: registry.redhat.io/ubi7/ubi-minimal
+      command:
+        - /bin/bash
+      args: ['-c', 'echo $(find /workspace/source -type f | wc -l) files in repo']
