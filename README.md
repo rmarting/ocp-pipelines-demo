@@ -16,6 +16,12 @@ If you don't have available a Red Hat OpenShift cluster, you could use
 [Red Hat CodeReady Containers](https://github.com/code-ready/crc) to have
 OpenShift 4 on your laptop.
 
+**TIP**: Create a new project (e.g.) `pipelines-demo` to follow this repo:
+
+```shell
+oc new-project pipelines-demo
+```
+
 ## Tasks
 
 A `Task` is a collection of `Steps` that you define and arrange in a specific
@@ -191,6 +197,23 @@ To start the pipeline:
 tkn pipeline start say-things-pipeline --showlog
 ```
 
+Or create a `PipelineRun` definition to start the pipeline:
+
+```yaml
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: say-things-pipelinerun
+spec:
+  pipelineRef:
+    name: say-things-pipeline
+```
+
+```shell
+oc apply -f 04-say-something-pipelinerun.yaml
+```
+
 ### Parallel Pipeline
 
 `Tasks` will be executed in the order defined in the pipeline, or create a
@@ -218,6 +241,10 @@ a unique name and a type.
 
 This is a mechanism to define the pipeline as generic as we can. Using resources
 the pipeline can be reused across different projects.
+
+**NOTE**: This resource is is defined as `alpha`, so it could change in the
+future. It is not recommended to used, as there are other resources available
+to cover this feature (such as `Workspaces`)
 
 This is a sample task using an input resource to count files:
 
@@ -396,6 +423,124 @@ tkn pipeline start count-workspace-pipeline \
     --workspace name=workspace,claimName=workspace-pvc \
     --showlog
 ```
+
+## Triggers
+
+Tekton Triggers is a Tekton component that allows you to detect and extract
+information from events from a variety of sources and deterministically instantiate
+and execute `TaskRuns` and `PipelineRuns` based on that information.
+Tekton Triggers can also pass information extracted from events directly to
+`TaskRuns` and `PipelineRuns`.
+
+References:
+
+* [TektonCD - Triggers](https://tekton.dev/docs/triggers/)
+
+To show how triggers works, we will extend our previous
+pipeline to be executed with a trigger when a new
+change is pushed into the GitHub repository.
+
+The main objects related with triggers are:
+
+* `EventListener`: listens for events at a specified port on your OpenShift
+cluster. Specifies one or more `Triggers` or `TriggerTemplates`.
+
+Create our `EventListener` that uses a `TriggerTemplate`:
+
+```shell
+oc apply -f 08-count-workspace-pipeline-eventlistener.yaml
+```
+
+The `EventListener` will create a service to be used to access to. If we want
+to use this service externally, we need to expose as a route:
+
+```shell
+❯ oc get svc
+NAME                                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
+el-count-workspace-pipeline-eventlistener   ClusterIP   172.30.134.93   <none>        8080/TCP,9000/TCP   13m
+❯ oc expose svc el-count-workspace-pipeline-eventlistener
+```
+
+The new should be similar to:
+
+```
+❯ oc get route
+NAME                                        HOST/PORT                                                                                                   PATH   SERVICES                                    PORT            TERMINATION   WILDCARD
+el-count-workspace-pipeline-eventlistener   el-count-workspace-pipeline-eventlistener-pipelines-demo.apps.cluster-76lkr.76lkr.sandbox1545.opentlc.com          el-count-workspace-pipeline-eventlistener   http-listener                 None
+```
+
+We will use this route later to integrate in our GitHub repository as a WebHook.
+
+* `Trigger`: specifies what happens when the `EventListener` detects an event.
+A `Trigger` specifies a `TriggerTemplate`, a `TriggerBinding`, and
+optionally, an Interceptor.
+
+```shell
+oc apply -f 08-count-workspace-pipeline-trigger.yaml
+```
+
+The trigger includes an [Interceptor](https://tekton.dev/docs/triggers/interceptors/),
+that it is a "catch-all" event processor to perform payload filtering, to get
+the details from GitHub repo.
+
+```yaml
+  interceptors:
+    - ref:
+        name: github
+      params:
+        - name: secretRef
+          value:
+            secretName: github-interceptor-webhook
+            secretKey: secret
+```
+
+This secret will be used to add a security check to confirm that GitHub is
+invoking the `EventListener` under a security context.
+
+We need to create a `Secret` with the value to use from GitHub WebHook
+to create a secured call.
+
+```shell
+oc apply -f 08-github-interceptor-webhook-secret.yaml
+```
+
+* `TriggerTemplate`: specifies a blueprint for the resource, such as a `TaskRun`
+or `PipelineRun`, that you want to instantiate and/or execute when your
+`EventListener` detects an event. It exposes parameters that you can use
+anywhere within your resource’s template.
+
+```shell
+oc apply -f 08-count-workspace-pipeline-triggertemplate.yaml
+```
+
+* `TriggerBinding`: specifies the fields in the event payload from which you
+want to extract data and the fields in your corresponding `TriggerTemplate`
+to populate with the extracted values. You can then use the populated fields
+in the `TriggerTemplate` to populate fields in the associated `TaskRun` or `PipelineRun`.
+
+```shell
+oc apply -f 08-count-workspace-pipeline-triggerbinding.yaml
+```
+
+The latest step is create a new GitHub WebHook in our repository using the
+route exposed above and adding the `/hooks` path. 
+
+In your GitHub repo go to `Settings -> Webhooks` and click `Add Webhook`. The
+fields we need to set are:
+
+* **Payload URL**: Your external IP Address from the route with `/hooks` path
+* **Content type**: application/json
+* **Secret**: Value defined in `github-interceptor-webhook` secret.
+
+From now every time you push a new change in your repository, a new pipeline
+execution will happen.
+
+```shell
+git push origin main
+```
+
+For more details about how to create a webhook, please, review this
+[doc](https://docs.github.com/en/developers/webhooks-and-events/webhooks/creating-webhooks).
 
 ## ... and beyond
 

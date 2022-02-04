@@ -1,0 +1,25 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: Trigger
+metadata:
+  name: github-listener-trigger
+spec:
+  interceptors:
+    - ref:
+        name: github
+      params:
+        - name: secretRef
+          value:
+            secretName: github-interceptor-webhook
+            secretKey: secret
+        - name: eventTypes
+          value: ["push"]
+    - ref:
+        name: cel
+      params:
+        - name: "filter"
+          value: body.ref == 'refs/heads/main'
+  bindings:
+    - ref: count-workspace-pipeline-triggerbinding
+  template:
+    ref: count-workspace-pipeline-triggertemplate

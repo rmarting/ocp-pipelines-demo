@@ -1,0 +1,8 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: say-things-pipelinerun
+spec:
+  pipelineRef:
+    name: say-things-pipeline

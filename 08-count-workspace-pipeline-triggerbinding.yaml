@@ -1,0 +1,11 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: count-workspace-pipeline-triggerbinding
+spec:
+  params:
+  - name: git_url
+    value: $(body.repository.url)
+  - name: git_revision
+    value: $(body.repository.default_branch)
