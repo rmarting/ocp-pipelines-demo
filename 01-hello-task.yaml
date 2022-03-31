@@ -10,6 +10,5 @@ spec:
   steps:
     - name: say-hello
       image: registry.redhat.io/ubi7/ubi-minimal
-      command:
-        - /bin/bash
+      command: ['/bin/bash']
       args: ['-c', 'echo Hello World']
