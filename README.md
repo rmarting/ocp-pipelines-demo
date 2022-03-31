@@ -22,6 +22,26 @@ OpenShift 4 on your laptop.
 oc new-project pipelines-demo
 ```
 
+## Pipelines Operator
+
+To use OpenShift Pipelines, it is required to install the operator in the platform, if it
+is not already installed. To deploy an OpenShift Operator a `cluster-admin` user is needed.
+
+To deploy the operators with a `cluster-admin` user in the `openshift-operators` namespace
+(default namespace to install operators in OpenShift):
+
+```shell
+oc apply -f 00-pipelines-subscription.yaml -n openshift-operators
+```
+
+To check the deployment status:
+
+```shell
+❯ oc get csv
+NAME                                     DISPLAY                       VERSION   REPLACES                            PHASE
+openshift-pipelines-operator-rh.v1.6.2   Red Hat OpenShift Pipelines   1.6.2     redhat-openshift-pipelines.v1.5.2   Succeeded
+```
+
 ## Tasks
 
 A `Task` is a collection of `Steps` that you define and arrange in a specific
