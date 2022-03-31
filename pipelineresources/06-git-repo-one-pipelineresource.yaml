@@ -10,4 +10,4 @@ spec:
   type: git  
   params:
     - name: url
-      value: https://github.com/mashrafrh/spring-trial.git
+      value: https://github.com/rmarting/kafka-clients-quarkus-sample.git
