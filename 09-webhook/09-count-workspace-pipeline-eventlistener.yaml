@@ -1,0 +1,9 @@
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: count-workspace-pipeline-eventlistener
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - triggerRef: webhook-listener-trigger
