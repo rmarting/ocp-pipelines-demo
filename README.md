@@ -1,14 +1,14 @@
 # Red Hat OpenShift Pipelines
 
-This is a sample tutorial to shows the main capabilities of
-Red Hat OpenShift Pipelines (based in [Tekton](https://tekton.dev/)).
+This is a sample tutorial to shows the main capabilities of Red Hat
+OpenShift Pipelines (based in [Tekton](https://tekton.dev/)).
 
 This tutorial walks through from the main components of this new way to
 define CICD pipelines.
 
 To follow it, the next requirements must be resolved:
 
-* Red Hat OpenShift
+* Red Hat OpenShift 4
 * Red Hat OpenShift Pipelines operator
 * [Tekton CLI](https://github.com/tektoncd/cli) (`tkn`)
 
@@ -60,7 +60,10 @@ oc apply -f 01-hello-task.yaml
 Start the task and show the log output:
 
 ```shell
-tkn task start hello-task --showlog
+❯ tkn task start hello-task --showlog
+TaskRun started: hello-task-run-gng4t
+Waiting for logs to be available...
+[say-hello] Hello World
 ```
 
 ### Parametrized Task
@@ -105,7 +108,7 @@ Start the task without parameters it will force to declare them:
 ```shell
 ❯ tkn task start hello-params-task --showlog
 ? Value for param `person` of type `string`? (Default is `World`) World
-TaskRun started: hello-params-task-run-96bw7
+TaskRun started: hello-params-task-run-xpgv7
 Waiting for logs to be available...
 [say-hello] Hello World
 ```
@@ -115,9 +118,12 @@ of the parameters. The argument `--param` or `-p` sets up a different value for
 the parameter:
 
 ```shell
-tkn task start hello-params-task hello-params \
+❯ tkn task start hello-params-task hello-params \
   -p person=Roman \
   --showlog
+TaskRun started: hello-params-task-run-jqfbs
+Waiting for logs to be available...
+[say-hello] Hello Roman
 ```
 
 ### Multiple Stepped Task
@@ -138,10 +144,22 @@ oc apply -f 03-hello-multisteps-task.yaml
 Start the task.
 
 ```shell
-tkn task start hello-multisteps-task \
+❯ tkn task start hello-multisteps-task \
   -p person=Roman \
   --showlog
+TaskRun started: hello-multisteps-task-run-xq79n
+Waiting for logs to be available...
+[write-hello] Preparing greeting
+[write-hello] Done!
+
+[say-hello] Hello Roman
+[say-hello] 
 ```
+
+OpenShift has a dashboard to check and review the current status of the `Tasks` and `TaskRuns` from
+the menu `Pipelines -> Tasks`.
+
+![Tasks Run Dashboard](./img/tasksrun-dashboard.png)
 
 ## Pipelines
 
@@ -194,13 +212,16 @@ oc apply -f 04-say-things-pipeline.yaml
 To start the pipeline:
 
 ```shell
-tkn pipeline start say-things-pipeline --showlog
+❯ tkn pipeline start say-things-pipeline --showlog
+PipelineRun started: say-things-pipeline-run-4wsvb
+Waiting for logs to be available...
+[second-task : say-it] And this is the second task
+[first-task : say-it] Hello, this is the first task
 ```
 
 Or create a `PipelineRun` definition to start the pipeline:
 
 ```yaml
----
 apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
@@ -211,8 +232,13 @@ spec:
 ```
 
 ```shell
-oc apply -f 04-say-something-pipelinerun.yaml
+oc apply -f 04-say-things-pipelinerun.yaml
 ```
+
+OpenShift has a dashboard to check and review the current status of the `Pipeline` and `PipelineRun` from
+the menu `Pipelines -> Pipelines`.
+
+![Pipeline Run Dashboard](./img/pipelinesrun-dashboard.png)
 
 ### Parallel Pipeline
 
@@ -229,114 +255,22 @@ oc apply -f 05-say-things-in-order-pipeline.yaml
 To start the pipeline:
 
 ```shell
-tkn pipeline start say-things-in-order-pipeline --showlog
+❯ tkn pipeline start say-things-in-order-pipeline --showlog
+PipelineRun started: say-things-in-order-pipeline-run-w6fvn
+Waiting for logs to be available...
+[first-task : say-it] Hello, this is the first task
+
+[second-parallel-task : say-it] Happening after task 1, in parallel with task 3
+[third-parallel-task : say-it] Happening after task 1, in parallel with task 2
+
+[fourth-task : say-it] Happening after task 2 and 3
 ```
 
-### Resources
+And the graphical representation of this pipeline run is:
 
-A `Pipeline` requires `PipelineResources` to provide inputs and store outputs
-for the `Tasks` that comprise it. You can declare those in the `resources`
-field in the `spec` section of the `Pipeline` definition. Each entry requires
-a unique name and a type.
-
-This is a mechanism to define the pipeline as generic as we can. Using resources
-the pipeline can be reused across different projects.
-
-**NOTE**: This resource is is defined as `alpha`, so it could change in the
-future. It is not recommended to used, as there are other resources available
-to cover this feature (such as `Workspaces`)
-
-This is a sample task using an input resource to count files:
-
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
-  name: count-files-task
-spec:
-  resources:
-    inputs:
-      - name: repo
-        type: git
-        targetPath: code
-  steps:
-    - name: count
-      image: registry.redhat.io/ubi7/ubi-minimal
-      command:
-        - /bin/bash
-      args: ['-c', 'echo $(find /workspace/code -type f | wc -l) files in repo']
-```
-
-This sample pipeline declares an input resource to be used for a task:
-
-```yaml
-apiVersion: tekton.dev/v1beta1
-kind: Pipeline
-metadata:
-  name: count-pipeline
-spec:
-  resources:
-    - name: git-repo
-      type: git
-  tasks:
-    - name: count-task-repo
-      taskRef:
-        name: count-files-task
-      resources:
-        inputs:
-          - name: repo
-            resource: git-repo
-```
-
-Create the task and the pipeline:
-
-```shell
-oc apply -f 06-count-files-task.yaml
-oc apply -f 06-count-pipeline.yaml
-```
-
-A sample of `PipelineResource` to identify the resource used by a pipeline
-is similar to:
-
-```yaml
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineResource
-metadata:
-  name: git-repo-one
-spec:
-  type: git  
-  params:
-    - name: url
-      value: https://github.com/mashrafrh/spring-trial.git
-```
-
-Create the resources for the pipeline
-
-```shell
-oc apply -f 06-git-repo-one-pipelineresource.yaml
-oc apply -f 06-git-repo-two-pipelineresource.yaml
-```
-
-Start the pipeline to use the first resource:
-
-```shell
-tkn pipeline start count-pipeline \
-    --resource git-repo=git-repo-one \
-    --showlog
-```
-
-And start the same pipeline using the second resource:
-
-```shell
-tkn pipeline start count-pipeline \
-    --resource git-repo=git-repo-two \
-    --showlog
-```
+![Parallel pipeline run](./img/say-things-in-order-pipelinerun.png)
 
 ### Workspaces
-
-`PipelineResources` are a great to define resources and reuse them in
-different pipelines, but they could not be enough for more complex patterns.
 
 `Workspaces` allow `Tasks` to declare parts of the filesystem that need
 to be provided at runtime by `TaskRuns`. A `TaskRun` can make these parts
@@ -365,7 +299,6 @@ References:
 This is a sample task with a workspace:
 
 ```yaml
----
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
@@ -382,10 +315,9 @@ spec:
       args: ['-c', 'echo $(find /workspace/source -type f | wc -l) files in repo']
 ```
 
-[07-count-workspace-pipeline.yaml](./07-count-workspace-pipeline.yaml)
-file describes a sample pipeline using a workspace across
-different tasks. This example uses a `ClusterTask` to
-demonstrate how to reuse these objects in a pipeline.
+[07-count-workspace-pipeline.yaml](./07-count-workspace-pipeline.yaml) file describes
+a sample pipeline using a workspace across different tasks. This example uses a
+`ClusterTask` to demonstrate how to reuse these objects in a pipeline.
 
 Create the task and the pipeline:
 
@@ -408,7 +340,7 @@ parameters declared in the pipeline:
 
 ```shell
 tkn pipeline start count-workspace-pipeline \
-    --param GIT_URL=https://github.com/mashrafrh/spring-trial.git \
+    --param GIT_URL=https://github.com/rmarting/kafka-clients-quarkus-sample.git \
     --param GIT_REVISION=master \
     --workspace name=workspace,claimName=workspace-pvc \
     --showlog
@@ -418,7 +350,7 @@ Start again the pipeline with other parameters:
 
 ```shell
 tkn pipeline start count-workspace-pipeline \
-    --param GIT_URL=https://github.com/elsony/devfile-sample-code-with-quarkus.git \
+    --param GIT_URL=https://github.com/rmarting/strimzi-migration-demo.git \
     --use-param-defaults \
     --workspace name=workspace,claimName=workspace-pvc \
     --showlog
@@ -436,9 +368,8 @@ References:
 
 * [TektonCD - Triggers](https://tekton.dev/docs/triggers/)
 
-To show how triggers works, we will extend our previous
-pipeline to be executed with a trigger when a new
-change is pushed into the GitHub repository.
+To show how triggers works, we will extend our previous pipeline to be executed
+with a trigger when a new change is pushed into the GitHub repository.
 
 The main objects related with triggers are:
 
@@ -463,10 +394,16 @@ el-count-workspace-pipeline-eventlistener   ClusterIP   172.30.134.93   <none>  
 
 The new should be similar to:
 
-```
+```shell
 ❯ oc get route
 NAME                                        HOST/PORT                                                                                                   PATH   SERVICES                                    PORT            TERMINATION   WILDCARD
 el-count-workspace-pipeline-eventlistener   el-count-workspace-pipeline-eventlistener-pipelines-demo.apps.cluster-76lkr.76lkr.sandbox1545.opentlc.com          el-count-workspace-pipeline-eventlistener   http-listener                 None
+```
+
+This command will get right url to use in the WebHook:
+
+```shell
+echo "$(oc get route el-count-workspace-pipeline-eventlistener --template='http://{{.spec.host}}')/hooks"
 ```
 
 We will use this route later to integrate in our GitHub repository as a WebHook.
@@ -529,7 +466,7 @@ In your GitHub repo go to `Settings -> Webhooks` and click `Add Webhook`. The
 fields we need to set are:
 
 * **Payload URL**: Your external IP Address from the route with `/hooks` path
-* **Content type**: application/json
+* **Content type**: `application/json`
 * **Secret**: Value defined in `github-interceptor-webhook` secret.
 
 From now every time you push a new change in your repository, a new pipeline
@@ -542,11 +479,16 @@ git push origin main
 For more details about how to create a webhook, please, review this
 [doc](https://docs.github.com/en/developers/webhooks-and-events/webhooks/creating-webhooks).
 
+If you want to integrate with other Git server, you could use Webhooks, following the
+examples created [here](./09-webhook)
+
 ## ... and beyond
 
 This repo includes a short summary of many of the main objects and capabilities of
-Tekton, but it is only a surface of all the them. Please, go to the resources of
-this amazing project to learn and improve your CICD pipelines in a cloud native way.
+Red Hat OpenShift Pipelines (a.k.a. Tekton), but it is only a surface of all the them.
+Please, go to the resources of this amazing project to learn and improve your
+CICD pipelines in a cloud native way.
 
+* [Red Hat OpenShift Pipelines Release Notes](https://docs.openshift.com/container-platform/4.10/cicd/pipelines/op-release-notes.html)
 * [TektonCD - Docs](https://tekton.dev/docs/)
 * [Tekton Playground](https://katacoda.com/tektoncd/scenarios/playground)
