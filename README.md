@@ -8,12 +8,12 @@ define CICD pipelines.
 
 To follow it, the next requirements must be resolved:
 
-* Red Hat OpenShift 4
-* Red Hat OpenShift Pipelines operator
+* Red Hat OpenShift 4.11.7
+* Red Hat OpenShift Pipelines Operator 1.8.0
 * [Tekton CLI](https://github.com/tektoncd/cli) (`tkn`)
 
 If you don't have available a Red Hat OpenShift cluster, you could use
-[Red Hat CodeReady Containers](https://github.com/code-ready/crc) to have
+[CRC - CodeReady Containers](https://github.com/code-ready/crc) to have
 OpenShift 4 on your laptop.
 
 **TIP**: Create a new project (e.g.) `pipelines-demo` to follow this repo:
@@ -38,8 +38,8 @@ To check the deployment status:
 
 ```shell
 ❯ oc get csv
-NAME                                     DISPLAY                       VERSION   REPLACES                            PHASE
-openshift-pipelines-operator-rh.v1.6.2   Red Hat OpenShift Pipelines   1.6.2     redhat-openshift-pipelines.v1.5.2   Succeeded
+NAME                                     DISPLAY                       VERSION   REPLACES                   PHASE
+openshift-pipelines-operator-rh.v1.8.0   Red Hat OpenShift Pipelines   1.8.0                                Succeeded
 ```
 
 ## Tasks
@@ -172,7 +172,7 @@ Waiting for logs to be available...
 [write-hello] Done!
 
 [say-hello] Hello Roman
-[say-hello] 
+
 ```
 
 OpenShift has a dashboard to check and review the current status of the `Tasks` and `TaskRuns` from
@@ -235,7 +235,9 @@ To start the pipeline:
 PipelineRun started: say-things-pipeline-run-4wsvb
 Waiting for logs to be available...
 [second-task : say-it] And this is the second task
+
 [first-task : say-it] Hello, this is the first task
+
 ```
 
 Or create a `PipelineRun` definition to start the pipeline:
@@ -282,7 +284,9 @@ Waiting for logs to be available...
 [second-parallel-task : say-it] Happening after task 1, in parallel with task 3
 [third-parallel-task : say-it] Happening after task 1, in parallel with task 2
 
+
 [fourth-task : say-it] Happening after task 2 and 3
+
 ```
 
 And the graphical representation of this pipeline run is:
@@ -415,8 +419,8 @@ The new should be similar to:
 
 ```shell
 ❯ oc get route
-NAME                                        HOST/PORT                                                                                                   PATH   SERVICES                                    PORT            TERMINATION   WILDCARD
-el-count-workspace-pipeline-eventlistener   el-count-workspace-pipeline-eventlistener-pipelines-demo.apps.cluster-76lkr.76lkr.sandbox1545.opentlc.com          el-count-workspace-pipeline-eventlistener   http-listener                 None
+NAME                                        HOST/PORT                                                                   PATH   SERVICES                                    PORT            TERMINATION   WILDCARD
+el-count-workspace-pipeline-eventlistener   el-count-workspace-pipeline-eventlistener-pipelines-demo.apps-crc.testing          el-count-workspace-pipeline-eventlistener   http-listener                 None
 ```
 
 This command will get right url to use in the WebHook:
