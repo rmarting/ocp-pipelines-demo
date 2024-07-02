@@ -19,7 +19,7 @@ the pipeline can be reused across different projects.
 This is a sample task using an input resource to count files:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: count-files-task
@@ -40,7 +40,7 @@ spec:
 This sample pipeline declares an input resource to be used for a task:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: count-pipeline

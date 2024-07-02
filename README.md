@@ -38,8 +38,8 @@ To check the deployment status:
 
 ```shell
 ❯ oc get csv
-NAME                                     DISPLAY                       VERSION   REPLACES                   PHASE
-openshift-pipelines-operator-rh.v1.8.0   Red Hat OpenShift Pipelines   1.8.0                                Succeeded
+NAME                                      DISPLAY                         VERSION   REPLACES                                  PHASE
+openshift-pipelines-operator-rh.v1.15.0   Red Hat OpenShift Pipelines      1.15.0   openshift-pipelines-operator-rh.v1.14.1   Succeeded
 ```
 
 ## Tasks
@@ -58,7 +58,7 @@ References:
 A sample task with a single step looks like similar to:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: hello-task
@@ -95,7 +95,7 @@ A extended version of the previous task to ask for the name of a person looks
 like similar to:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: hello-params-task
@@ -199,7 +199,7 @@ References:
 A simple pipeline looks like similar to:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: say-things-pipeline
@@ -243,7 +243,7 @@ Waiting for logs to be available...
 Or create a `PipelineRun` definition to start the pipeline:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
   name: say-things-pipelinerun
@@ -322,7 +322,7 @@ References:
 This is a sample task with a workspace:
 
 ```yaml
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1
 kind: Task
 metadata:
   name: count-files-workspace-task

@@ -1,5 +1,5 @@
 ---
-apiVersion: triggers.tekton.dev/v1beta1
+apiVersion: triggers.tekton.dev/v1
 kind: TriggerTemplate
 metadata:
   name: count-workspace-pipeline-triggertemplate
@@ -10,7 +10,7 @@ spec:
     - name: git_revision
       description: The revision of the repository  
   resourcetemplates:
-    - apiVersion: tekton.dev/v1beta1
+    - apiVersion: tekton.dev/v1
       kind: PipelineRun
       metadata:
         generateName: count-workspace-pipeline-run-

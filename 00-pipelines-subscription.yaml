@@ -8,5 +8,5 @@ spec:
   name: openshift-pipelines-operator-rh
   source: redhat-operators
   sourceNamespace: openshift-marketplace
-  channel: pipelines-1.8
-  currentCSV: openshift-pipelines-operator-rh.v1.8.0
+  channel: latest
+  currentCSV: openshift-pipelines-operator-rh.v1.15.0
