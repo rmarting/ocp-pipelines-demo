@@ -8,8 +8,8 @@ define CICD pipelines.
 
 To follow it, the next requirements must be resolved:
 
-* Red Hat OpenShift 4.11.7
-* Red Hat OpenShift Pipelines Operator 1.8.0
+* Red Hat OpenShift 4.14+
+* Red Hat OpenShift Pipelines Operator 1.15.0
 * [Tekton CLI](https://github.com/tektoncd/cli) (`tkn`)
 
 If you don't have available a Red Hat OpenShift cluster, you could use
@@ -364,7 +364,7 @@ parameters declared in the pipeline:
 ```shell
 tkn pipeline start count-workspace-pipeline \
     --param GIT_URL=https://github.com/rmarting/kafka-clients-quarkus-sample.git \
-    --param GIT_REVISION=master \
+    --param GIT_REVISION=main \
     --workspace name=workspace,claimName=workspace-pvc \
     --showlog
 ```
@@ -483,7 +483,7 @@ oc apply -f 08-count-workspace-pipeline-triggerbinding.yaml
 ```
 
 The latest step is create a new GitHub WebHook in our repository using the
-route exposed above and adding the `/hooks` path. 
+route exposed above and adding the `/hooks` path.
 
 In your GitHub repo go to `Settings -> Webhooks` and click `Add Webhook`. The
 fields we need to set are:
