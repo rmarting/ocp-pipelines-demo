@@ -1,21 +1,21 @@
 ---
-apiVersion: triggers.tekton.dev/v1
+apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
   name: count-workspace-pipeline-triggertemplate
 spec:
   params:
     - name: git_url
-      description: The git repository that hosts context  
+      description: The git repository that hosts context
     - name: git_revision
-      description: The revision of the repository  
+      description: The revision of the repository
   resourcetemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
       metadata:
         generateName: count-workspace-pipeline-run-
         annotations:
-          tekton.dev/gitURL: "$(tt.params.git_url)"      
+          tekton.dev/gitURL: "$(tt.params.git_url)"
       spec:
         pipelineRef:
           name: count-workspace-pipeline
@@ -28,4 +28,3 @@ spec:
           - name: workspace
             persistentVolumeClaim:
               claimName: workspace-pvc
-        
