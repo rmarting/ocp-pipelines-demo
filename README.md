@@ -14,7 +14,8 @@ To follow it, the next requirements must be resolved:
 
 If you don't have available a Red Hat OpenShift cluster, you could use
 [CRC - CodeReady Containers](https://github.com/code-ready/crc) to have
-OpenShift 4 on your laptop.
+OpenShift 4 on your laptop. Other alternative is use the [Developer Sandbox](https://developers.redhat.com/developer-sandbox)
+by Red Hat Developer program.
 
 **TIP**: Create a new project (e.g.) `pipelines-demo` to follow this repo:
 
@@ -23,6 +24,9 @@ oc new-project pipelines-demo
 ```
 
 ## Pipelines Operator
+
+**NOTE**: If you are using a shared environment, such as Developer Sandbox, the operator could
+be already available. So you can skip this step.
 
 To use OpenShift Pipelines, it is required to install the operator in the platform, if it
 is not already installed. To deploy an OpenShift Operator a `cluster-admin` user is needed.
