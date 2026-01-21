@@ -2,18 +2,18 @@
 
 :warning: `PipelineResources` are deprecated. :warning:
 
-**NOTE**: This resource is is defined as `alpha`, so it could change in the
-future. It is not recommended to used, as there are other resources available
+**NOTE**: This resource is defined as `alpha`, so it could change in the
+future. It is not recommended to use it, as there are other resources available
 to cover this feature (such as `Workspaces`)
 
-:dart: This section is here only for old references but it will not longer maintained :dart:
+:dart: This section is here only for old references but it will no longer be maintained :dart:
 
 A `Pipeline` requires `PipelineResources` to provide inputs and store outputs
 for the `Tasks` that comprise it. You can declare those in the `resources`
 field in the `spec` section of the `Pipeline` definition. Each entry requires
 a unique name and a type.
 
-This is a mechanism to define the pipeline as generic as we can. Using resources
+This is a mechanism to define the pipeline as generically as possible. Using resources,
 the pipeline can be reused across different projects.
 
 This is a sample task using an input resource to count files:
@@ -31,7 +31,7 @@ spec:
         targetPath: code
   steps:
     - name: count
-      image: registry.redhat.io/ubi7/ubi-minimal
+      image: registry.redhat.io/ubi8/ubi-minimal
       command:
         - /bin/bash
       args: ['-c', 'echo $(find /workspace/code -type f | wc -l) files in repo']
@@ -60,7 +60,7 @@ spec:
 
 Create the task and the pipeline:
 
-```shell
+```bash
 oc apply -f 06-count-files-task.yaml
 oc apply -f 06-count-pipeline.yaml
 ```
@@ -82,14 +82,14 @@ spec:
 
 Create the resources for the pipeline:
 
-```shell
+```bash
 oc apply -f 06-git-repo-one-pipelineresource.yaml
 oc apply -f 06-git-repo-two-pipelineresource.yaml
 ```
 
 Start the pipeline to use the first resource:
 
-```shell
+```bash
 ❯ tkn pipeline start count-pipeline \
     --resource git-repo=git-repo-one \
     --showlog
@@ -103,7 +103,7 @@ Waiting for logs to be available...
 
 And start the same pipeline using the second resource:
 
-```shell
+```bash
 ❯ tkn pipeline start count-pipeline \
     --resource git-repo=git-repo-two \
     --showlog

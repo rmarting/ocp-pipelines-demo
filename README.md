@@ -1,49 +1,53 @@
 # Red Hat OpenShift Pipelines
 
-This is a sample tutorial to shows the main capabilities of Red Hat
-OpenShift Pipelines (based in [Tekton](https://tekton.dev/)).
+This is a sample tutorial that shows the main capabilities of Red Hat
+OpenShift Pipelines (based on [Tekton](https://tekton.dev/)).
 
-This tutorial walks through from the main components of this new way to
-define CICD pipelines.
+This tutorial walks through the main components of this new way to
+define CI/CD pipelines.
 
-To follow it, the next requirements must be resolved:
+To follow it, the following requirements must be met:
 
-* Red Hat OpenShift 4.14+
-* Red Hat OpenShift Pipelines Operator 1.15.0
+* Red Hat OpenShift 4.20
+* Red Hat OpenShift Pipelines Operator 1.20.0
 * [Tekton CLI](https://github.com/tektoncd/cli) (`tkn`)
 
-If you don't have available a Red Hat OpenShift cluster, you could use
-[CRC - CodeReady Containers](https://github.com/code-ready/crc) to have
-OpenShift 4 on your laptop. Other alternative is use the [Developer Sandbox](https://developers.redhat.com/developer-sandbox)
+If you don't have access to a Red Hat OpenShift cluster, you could use
+[CRC - CodeReady Containers](https://github.com/crc-org/crc) to have
+OpenShift 4 on your laptop. Another alternative is to use the [Developer Sandbox](https://developers.redhat.com/developer-sandbox)
 by Red Hat Developer program.
 
-**TIP**: Create a new project (e.g.) `pipelines-demo` to follow this repo:
+**TIP**: Create a new project (e.g., `pipelines-demo`) to follow this repo:
 
-```shell
+```bash
 oc new-project pipelines-demo
 ```
 
 ## Pipelines Operator
 
-**NOTE**: If you are using a shared environment, such as Developer Sandbox, the operator could
-be already available. So you can skip this step.
+**NOTE**: If you are using a shared environment, such as Developer Sandbox, the operator may
+already be available. So you can skip this step.
 
-To use OpenShift Pipelines, it is required to install the operator in the platform, if it
-is not already installed. To deploy an OpenShift Operator a `cluster-admin` user is needed.
+**UPGRADE NOTE**: If you are upgrading from OpenShift Pipelines 1.15 or earlier versions, you may
+need to upgrade through intermediate versions (e.g., 1.15 → 1.16 → 1.17 → ... → 1.20) due to
+missing `olm.skipRange` metadata in some versions. Direct upgrades may fail in certain cases.
 
-To deploy the operators with a `cluster-admin` user in the `openshift-operators` namespace
+To use OpenShift Pipelines, you need to install the operator in the platform, if it
+is not already installed. To deploy an OpenShift Operator, a `cluster-admin` user is needed.
+
+To deploy the operator with a `cluster-admin` user in the `openshift-operators` namespace
 (default namespace to install operators in OpenShift):
 
-```shell
+```bash
 oc apply -f 00-pipelines-subscription.yaml -n openshift-operators
 ```
 
 To check the deployment status:
 
-```shell
-❯ oc get csv
+```bash
+❯ oc get csv -n openshift-operators
 NAME                                      DISPLAY                         VERSION   REPLACES                                  PHASE
-openshift-pipelines-operator-rh.v1.15.0   Red Hat OpenShift Pipelines      1.15.0   openshift-pipelines-operator-rh.v1.14.1   Succeeded
+openshift-pipelines-operator-rh.v1.20.2   Red Hat OpenShift Pipelines      1.20.2   openshift-pipelines-operator-rh.v1.20.1   Succeeded
 ```
 
 ## Tasks
@@ -59,7 +63,7 @@ References:
 
 ### Sample Task
 
-A sample task with a single step looks like similar to:
+A sample task with a single step looks similar to:
 
 ```yaml
 apiVersion: tekton.dev/v1
@@ -69,20 +73,20 @@ metadata:
 spec:
   steps:
     - name: say-hello
-      image: registry.redhat.io/ubi7/ubi-minimal
+      image: registry.redhat.io/ubi8/ubi-minimal
       command: ['/bin/bash']
       args: ['-c', 'echo Hello World']
 ```
 
 Create this task in OpenShift:
 
-```shell
+```bash
 oc apply -f 01-hello-task.yaml
 ```
 
 Start the task and show the log output:
 
-```shell
+```bash
 ❯ tkn task start hello-task --showlog
 TaskRun started: hello-task-run-gng4t
 Waiting for logs to be available...
@@ -95,8 +99,8 @@ Waiting for logs to be available...
 used in the `Task`. These parameters can be instrumental in making your `Tasks`
 more generic and reusable across `Pipelines`.
 
-A extended version of the previous task to ask for the name of a person looks
-like similar to:
+An extended version of the previous task to ask for the name of a person looks
+similar to:
 
 ```yaml
 apiVersion: tekton.dev/v1
@@ -111,47 +115,47 @@ spec:
       type: string
   steps:
     - name: say-hello
-      image: registry.redhat.io/ubi7/ubi-minimal
+      image: registry.redhat.io/ubi8/ubi-minimal
       command:
         - /bin/bash
-      args: ['-c', 'echo Hello $(params.person)']
+      args: ['-c', 'echo Hello $(params.person)!']
 ```
 
-This parameter could define a default value, in case it is not defined when the
+Parameters can define a default value, in case they are not defined when the
 task is started.
 
 Create the task:
 
-```shell
+```bash
 oc apply -f 02-hello-params-task.yaml
 ```
 
-Start the task without parameters it will force to declare them:
+When starting the task without parameters, it will prompt you to declare them:
 
-```shell
+```bash
 ❯ tkn task start hello-params-task --showlog
 ? Value for param `person` of type `string`? (Default is `World`) World
 TaskRun started: hello-params-task-run-xpgv7
 Waiting for logs to be available...
-[say-hello] Hello World
+[say-hello] Hello World!
 ```
 
 `tkn` includes the `--use-param-defaults` argument to use the default values
 of the parameters. The argument `--param` or `-p` sets up a different value for
 the parameter:
 
-```shell
+```bash
 ❯ tkn task start hello-params-task hello-params \
   -p person=Roman \
   --showlog
 TaskRun started: hello-params-task-run-jqfbs
 Waiting for logs to be available...
-[say-hello] Hello Roman
+[say-hello] Hello Roman!
 ```
 
 ### Multiple Stepped Task
 
-`Tasks` can have more than one `step`, allowing to specialize the task with more
+`Tasks` can have more than one `step`, allowing you to specialize the task with more
 detailed steps. The steps will run in the order in which they are defined in the
 steps array.
 
@@ -160,13 +164,13 @@ task with two steps to combine the execution of the task.
 
 Create the task:
 
-```shell
+```bash
 oc apply -f 03-hello-multisteps-task.yaml
 ```
 
 Start the task.
 
-```shell
+```bash
 ❯ tkn task start hello-multisteps-task \
   -p person=Roman \
   --showlog
@@ -200,7 +204,7 @@ References:
 
 ### Sample Pipeline
 
-A simple pipeline looks like similar to:
+A simple pipeline looks similar to:
 
 ```yaml
 apiVersion: tekton.dev/v1
@@ -227,14 +231,14 @@ spec:
 
 Create the task and pipeline:
 
-```shell
+```bash
 oc apply -f 04-say-something-task.yaml
 oc apply -f 04-say-things-pipeline.yaml
 ```
 
 To start the pipeline:
 
-```shell
+```bash
 ❯ tkn pipeline start say-things-pipeline --showlog
 PipelineRun started: say-things-pipeline-run-4wsvb
 Waiting for logs to be available...
@@ -256,7 +260,7 @@ spec:
     name: say-things-pipeline
 ```
 
-```shell
+```bash
 oc apply -f 04-say-things-pipelinerun.yaml
 ```
 
@@ -267,19 +271,19 @@ the menu `Pipelines -> Pipelines`.
 
 ### Parallel Pipeline
 
-`Tasks` will be executed in the order defined in the pipeline, or create a
-sequence using `runAfter` definition.
+`Tasks` will be executed in the order defined in the pipeline, or you can create a
+sequence using the `runAfter` definition.
 
 [05-say-things-in-order-pipeline.yaml](./05-say-things-in-order-pipeline.yaml) file
 has a sample of order and parallel tasks in a pipeline.
 
-```shell
+```bash
 oc apply -f 05-say-things-in-order-pipeline.yaml
 ```
 
 To start the pipeline:
 
-```shell
+```bash
 ❯ tkn pipeline start say-things-in-order-pipeline --showlog
 PipelineRun started: say-things-in-order-pipeline-run-w6fvn
 Waiting for logs to be available...
@@ -333,10 +337,10 @@ metadata:
 spec:
   workspaces:
     - name: source
-      description: The workspace consisting of repository.
+      description: The workspace consisting of a repository.
   steps:
     - name: count
-      image: registry.redhat.io/ubi7/ubi-minimal
+      image: registry.redhat.io/ubi8/ubi-minimal
       command:
         - /bin/bash
       args: ['-c', 'echo $(find /workspace/source -type f | wc -l) files in repo']
@@ -348,24 +352,24 @@ a sample pipeline using a workspace across different tasks. This example uses a
 
 Create the task and the pipeline:
 
-```shell
+```bash
 oc apply -f 07-count-files-workspace-task.yaml
 oc apply -f 07-count-workspace-pipeline.yaml
 ```
 
-As this workspace requires a storage, we need to create the `PersistentVolumeClaim`.
+Since this workspace requires storage, we need to create the `PersistentVolumeClaim`.
 The [07-workspace-pvc.yaml](./07-workspace-pvc.yaml) defines it.
 
 Create PVC to store the data:
 
-```shell
+```bash
 oc apply -f 07-workspace-pvc.yaml
 ```
 
-Start the pipeline requires to declare the workspace to use, among other
+Starting the pipeline requires declaring the workspace to use, among other
 parameters declared in the pipeline:
 
-```shell
+```bash
 tkn pipeline start count-workspace-pipeline \
     --param GIT_URL=https://github.com/rmarting/kafka-clients-quarkus-sample.git \
     --param GIT_REVISION=main \
@@ -373,9 +377,9 @@ tkn pipeline start count-workspace-pipeline \
     --showlog
 ```
 
-Start again the pipeline with other parameters:
+Run the pipeline again with other parameters:
 
-```shell
+```bash
 tkn pipeline start count-workspace-pipeline \
     --param GIT_URL=https://github.com/rmarting/strimzi-migration-demo.git \
     --use-param-defaults \
@@ -395,57 +399,57 @@ References:
 
 * [TektonCD - Triggers](https://tekton.dev/docs/triggers/)
 
-To show how triggers works, we will extend our previous pipeline to be executed
-with a trigger when a new change is pushed into the GitHub repository.
+To show how triggers work, we will extend our previous pipeline to be executed
+with a trigger when a new change is pushed to the GitHub repository.
 
-The main objects related with triggers are:
+The main objects related to triggers are:
 
 * `EventListener`: listens for events at a specified port on your OpenShift
 cluster. Specifies one or more `Triggers` or `TriggerTemplates`.
 
 Create our `EventListener` that uses a `TriggerTemplate`:
 
-```shell
+```bash
 oc apply -f 08-count-workspace-pipeline-eventlistener.yaml
 ```
 
-The `EventListener` will create a service to be used to access to. If we want
-to use this service externally, we need to expose as a route:
+The `EventListener` will create a service that can be accessed. If we want
+to use this service externally, we need to expose it as a route:
 
-```shell
+```bash
 ❯ oc get svc
 NAME                                        TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)             AGE
 el-count-workspace-pipeline-eventlistener   ClusterIP   172.30.134.93   <none>        8080/TCP,9000/TCP   13m
 ❯ oc expose svc el-count-workspace-pipeline-eventlistener
 ```
 
-The new should be similar to:
+The output should be similar to:
 
-```shell
+```bash
 ❯ oc get route
 NAME                                        HOST/PORT                                                                   PATH   SERVICES                                    PORT            TERMINATION   WILDCARD
 el-count-workspace-pipeline-eventlistener   el-count-workspace-pipeline-eventlistener-pipelines-demo.apps-crc.testing          el-count-workspace-pipeline-eventlistener   http-listener                 None
 ```
 
-This command will get right url to use in the WebHook:
+This command will get the right URL to use in the Webhook:
 
-```shell
+```bash
 echo "$(oc get route el-count-workspace-pipeline-eventlistener --template='http://{{.spec.host}}')/hooks"
 ```
 
-We will use this route later to integrate in our GitHub repository as a WebHook.
+We will use this route later to integrate it into our GitHub repository as a webhook.
 
 * `Trigger`: specifies what happens when the `EventListener` detects an event.
 A `Trigger` specifies a `TriggerTemplate`, a `TriggerBinding`, and
 optionally, an Interceptor.
 
-```shell
+```bash
 oc apply -f 08-count-workspace-pipeline-trigger.yaml
 ```
 
 The trigger includes an [Interceptor](https://tekton.dev/docs/triggers/interceptors/),
-that it is a "catch-all" event processor to perform payload filtering, to get
-the details from GitHub repo.
+which is a "catch-all" event processor that performs payload filtering to get
+the details from the GitHub repository.
 
 ```yaml
   interceptors:
@@ -461,10 +465,10 @@ the details from GitHub repo.
 This secret will be used to add a security check to confirm that GitHub is
 invoking the `EventListener` under a security context.
 
-We need to create a `Secret` with the value to use from GitHub WebHook
+We need to create a `Secret` with the value to use from the GitHub webhook
 to create a secured call.
 
-```shell
+```bash
 oc apply -f 08-github-interceptor-webhook-secret.yaml
 ```
 
@@ -473,7 +477,7 @@ or `PipelineRun`, that you want to instantiate and/or execute when your
 `EventListener` detects an event. It exposes parameters that you can use
 anywhere within your resource’s template.
 
-```shell
+```bash
 oc apply -f 08-count-workspace-pipeline-triggertemplate.yaml
 ```
 
@@ -482,11 +486,11 @@ want to extract data and the fields in your corresponding `TriggerTemplate`
 to populate with the extracted values. You can then use the populated fields
 in the `TriggerTemplate` to populate fields in the associated `TaskRun` or `PipelineRun`.
 
-```shell
+```bash
 oc apply -f 08-count-workspace-pipeline-triggerbinding.yaml
 ```
 
-The latest step is create a new GitHub WebHook in our repository using the
+The final step is to create a new GitHub webhook in our repository using the
 route exposed above and adding the `/hooks` path.
 
 In your GitHub repo go to `Settings -> Webhooks` and click `Add Webhook`. The
@@ -496,10 +500,11 @@ fields we need to set are:
 * **Content type**: `application/json`
 * **Secret**: Value defined in `github-interceptor-webhook` secret.
 
-From now every time you push a new change in your repository, a new pipeline
+From now on, every time you push a new change to your repository, a new pipeline
 execution will happen.
 
-```shell
+```bash
+git commit --allow-empty -m "🚧 work-in-progress"
 git push origin main
 ```
 
@@ -512,10 +517,9 @@ examples created [here](./09-webhook)
 ## ... and beyond
 
 This repo includes a short summary of many of the main objects and capabilities of
-Red Hat OpenShift Pipelines (a.k.a. Tekton), but it is only a surface of all the them.
-Please, go to the resources of this amazing project to learn and improve your
-CICD pipelines in a cloud native way.
+Red Hat OpenShift Pipelines (a.k.a. Tekton), but it only scratches the surface of all of them.
+Please go to the resources of this amazing project to learn and improve your
+CI/CD pipelines in a cloud native way.
 
-* [Red Hat OpenShift Pipelines Release Notes](https://docs.openshift.com/container-platform/4.10/cicd/pipelines/op-release-notes.html)
+* [Red Hat OpenShift Pipelines Release Notes](https://docs.redhat.com/en/documentation/red_hat_openshift_pipelines/1.20/html-single/release_notes/)
 * [TektonCD - Docs](https://tekton.dev/docs/)
-* [Tekton Playground](https://katacoda.com/tektoncd/scenarios/playground)
