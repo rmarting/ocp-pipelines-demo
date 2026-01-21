@@ -9,10 +9,10 @@ metadata:
 spec:
   workspaces:
     - name: source
-      description: The workspace consisting of repository.
+      description: The workspace consisting of a repository.
   steps:
     - name: count
-      image: registry.redhat.io/ubi7/ubi-minimal
+      image: registry.redhat.io/ubi8/ubi
       command:
         - /bin/bash
       args: ['-c', 'echo $(find /workspace/source -type f | wc -l) files in repo']

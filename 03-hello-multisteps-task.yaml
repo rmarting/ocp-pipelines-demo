@@ -15,11 +15,11 @@ spec:
       type: string
   steps:
     - name: write-hello
-      image: registry.redhat.io/ubi7/ubi-minimal
+      image: registry.redhat.io/ubi8/ubi-minimal
       script: |
         #!/usr/bin/env bash
         echo Preparing greeting
-        echo -n Hello $(params.person) > /tekton/home/hello.txt
+        echo -n Hello $(params.person)! > /tekton/home/hello.txt
         sleep 2
         echo Done!
     - name: say-hello
