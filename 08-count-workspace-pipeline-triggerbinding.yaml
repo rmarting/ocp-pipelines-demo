@@ -6,6 +6,6 @@ metadata:
 spec:
   params:
   - name: git_url
-    value: $(body.repository.url)
+    value: $(body.repository.html_url)
   - name: git_revision
     value: $(body.repository.default_branch)
