@@ -25,8 +25,14 @@ spec:
         - name: revision
           value: $(params.GIT_REVISION)
       taskRef:
-        kind: ClusterTask
-        name: git-clone
+        resolver: git
+        params:
+          - name: url
+            value: https://github.com/tektoncd/catalog.git
+          - name: revision
+            value: main
+          - name: pathInRepo
+            value: task/git-clone/0.10/git-clone.yaml
       workspaces:
         - name: output
           workspace: workspace

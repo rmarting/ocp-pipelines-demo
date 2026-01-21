@@ -9,4 +9,4 @@ spec:
   source: redhat-operators
   sourceNamespace: openshift-marketplace
   channel: latest
-  currentCSV: openshift-pipelines-operator-rh.v1.15.0
+  currentCSV: openshift-pipelines-operator-rh.v1.20.2
